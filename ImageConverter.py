@@ -1,21 +1,26 @@
 from PIL import Image
 import io
 
-inputFile = "Example Files\CoelaCantNoBG.png"
-outputFile = "Output\CoelaCant.h"
-name = "CoelaCant"
+inputFile = "Example Files\CoelaToot.png"
+outputFile = "Output\CoelaToot.h"
+pictureOutput = "Output\CoelaToot.png"
+name = "CoelaToot"
+numColors = 16 
 
 def GetData(className, file):
-    image = Image.open(file).convert('RGB')
+    image = Image.open(file).convert("P", palette = Image.ADAPTIVE, colors = numColors)
+    image.save(pictureOutput)
     w, h = image.size
+    pal = image.getpalette()
 
     data = "#pragma once\n\n"
     data += "#include \"..\..\Materials\Image.h\"\n\n"
     data += "class " + className + " : public Image{\n"
     data += "private:\n"
-    data += "\tstatic const uint8_t rgbMemory[];\n\n"
+    data += "\tstatic const uint8_t rgbMemory[];\n"
+    data += "\tstatic const uint8_t rgbColors[];\n\n"
     data += "public:\n"
-    data += "\t" + className + "(Vector2D size, Vector2D offset) : Image(Image::RGB, rgbMemory, " + str(w) + ", " + str(h) +") {\n"
+    data += "\t" + className + "(Vector2D size, Vector2D offset) : Image(rgbMemory, rgbColors, " + str(w) + ", " + str(h) + ", " + str(numColors) + ") {\n"
     data += "\t\tSetSize(size);\n"
     data += "\t\tSetPosition(offset);\n"
     data += "\t}\n};\n\n"
@@ -24,14 +29,30 @@ def GetData(className, file):
     
     for i in range(h):
         for j in range(w):
-            r, g, b = image.getpixel((j, i))
+            index = image.getpixel((j, i))
 
-            data += str(r) + "," + str(g) + "," + str(b)
+            data += str(index)
             
             if i == h - 1 and j == w - 1:
-                data += "};\n"
+                data += "};\n\n"
             else:
                 data += ","
+
+    data += "const uint8_t " + className + "::rgbColors[] PROGMEM = {"
+    
+    pal = image.getpalette()
+
+    for i in range(numColors):
+        r = pal[i * 3]
+        g = pal[i * 3 + 1]
+        b = pal[i * 3 + 2]
+
+        data += str(r) + "," + str(g) + "," + str(b)
+        
+        if i == numColors - 1:
+            data += "};\n"
+        else:
+            data += ","
 
     return data
 
