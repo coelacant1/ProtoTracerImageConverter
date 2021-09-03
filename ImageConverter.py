@@ -11,6 +11,8 @@ def GetData(className, file):
     image = Image.open(file).convert("P", palette = Image.ADAPTIVE, colors = numColors)
     image.save(pictureOutput)
     w, h = image.size
+    
+    image.seek(0)
     pal = image.getpalette()
 
     data = "#pragma once\n\n"
